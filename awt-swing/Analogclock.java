@@ -1,96 +1,86 @@
-import java.applet.Applet;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.util.Calendar;
+import java.applet.Applet; //подключение стандартной библиотеки для работы с аплетами, инкапсулирует поведение аплетов Java
+import java.awt.Graphics;  //подключение стандартной библиотеки для рисования графических примитивов (линий, круга, надписей по координатам)
+import java.util.Calendar; //подключение стандартной библиотеки для получения точного времени
 
-public class Analogclock extends Applet implements Runnable
-{
-    private static final double TWO_PI   = 2.0 * Math.PI;
-    
-    private Calendar nw = Calendar.getInstance();
-    
-    int width = 300,hight = 300;
-    int xcent = width / 2, ycent = hight / 2;
-    int minhand,maxhand;
-    double rdns;
-    int dxmin,dymin,dxmax,dymax;
-    double radins,sine,cosine;
-    double fminutes;
-    Thread t = null;
-    Boolean stopFlag;
-  
-    public void start()
-    {
-       t = new Thread(this);
-       stopFlag = false;
-       t.start();
-    }
-    
-    public void run()
-    {
-       for( ; ; )
-       {
-          try {
-                 updateTime();
-                 repaint();
-                 Thread.sleep(100);
-                 if(stopFlag)
-                    break;
-               }
-          catch(InterruptedException e) {}
-       }
-    }
-    
-    public void stop()
-    {
-        stopFlag = true;
-        t = null;
-    }
-    
-    private void updateTime() {
-        nw.setTimeInMillis(System.currentTimeMillis());
-    }
-    
-    public void paint(Graphics g)
-    {
-        int hours   = nw.get(Calendar.HOUR);
-        int minutes = nw.get(Calendar.MINUTE);
-        int seconds = nw.get(Calendar.SECOND);
-        int millis  = nw.get(Calendar.MILLISECOND);
-        
-        minhand = width /8;
-        maxhand = width /2;
-        rdns = (seconds + ((double)millis/1000)) / 60.0;
-        drw(g, rdns, 0, maxhand);
-        
-        minhand = 0;                    
-        maxhand = width / 3;
-        fminutes = (minutes + rdns) / 60.0;
-        drw(g, fminutes, 0, maxhand);
-        
-        minhand = 0;                   
-        maxhand = width / 4;
-        drw(g, (hours + fminutes) / 12.0, 0, maxhand);
-        g.drawOval(0, 0, width, hight);
-        
-        g.drawString("9", xcent-145, ycent -0);
-        g.drawString("3", xcent+140, ycent -0);
-        g.drawString("6", xcent , ycent+145);
-        g.drawString("12", xcent , ycent-135);
-        
-     }
-   
-    public void drw(Graphics g, double prct, int minRadius, int maxRadius) 
-    {
-        radins = (0.5 - prct)*TWO_PI;
-        sine   = Math.sin(radins);
-        cosine = Math.cos(radins);
-        dxmin = xcent + (int)(minRadius * sine);
-        dymin = ycent + (int)(minRadius * cosine);
-       
-        dxmax = xcent + (int)(maxRadius * sine);
-        dymax = ycent + (int)(maxRadius * cosine);
-      
-        g.drawLine(dxmin, dymin, dxmax, dymax);
-    }
-}
+public class Analogclock extends Applet implements Runnable { //объявление публичного класса Analogclock, который наследуется (extends) от класса Applet и реализует (implements) интерфейс Runnable
+    private static final double TWO_PI = 2.0 * Math.PI; //объявление приватной статической константы TWO_PI дробного типа (double), в которую присваивается значение выражения 2.0 * Math.PI
+
+    private Calendar nw = Calendar.getInstance(); //создание экземпляра класса Calendar для работы с текущим временем и датой
+
+    int width = 300, hight = 300;               //целочисленные переменные для задания ширины и высоты аплета
+    int xcent = width / 2, ycent = hight / 2;   //-|- центральной точки часов (откуда стрелки начинаются)
+    int maxhand;                                //-|- длины стрелок часов
+    int dxmin, dymin, dxmax, dymax;             //-|- расчёта координат стрелок в методе drw(Graphics g, double prct, int minRadius, int maxRadius)
+    double radins, sine, cosine;                //-|- расчёта радиан, синуса косинуса в том же методе
+    double fminutes;                            //-|- расчёта минут в формуле метода paint(Graphics g)
+    double rdns;                                //-|- расчёта миллисекунд в формуле метода paint(Graphics g)
+    Thread t = null; //объявление потока выполнения приложения с присвоением его нулевого значения
+    Boolean stopFlag; //переменная-флаг для выхода из бесконечного цикла отображения часов
+
+    public void start() { //реализация метода start() из интерфейса Runnable. Запускается в первую очередь
+        t = new Thread(this); //создание нового потока для данного (this) объекта
+        stopFlag = false; //установление переменной-флажка в отрицательное значение. Пока он false - приложение работает
+        t.start();  //для запуска потока t на выполнение необходимо вызвать для него метод start()
+    } //конец метода start()
+
+    public void run() { //реализация метода run() из интерфейса Runnable. Получает управление после запуска метода start()
+        for( ; ; ) { //бесконечный цикл для отображения работы часов
+            try { //начало блока перехвата исключения InterruptedException e (ошибки прерывания потока)
+                updateTime(); //обновить значения текущего времени
+                repaint();    //перерисовать интерфейс аплета
+                Thread.sleep(100); //задержка выполнения потока на заданное количество милисек, если изменить на 1000, то секундная стрелка будет отсчитывать секунды, а не мс
+                if(stopFlag)   //если переменная stopFlag изменила своё значение на true (то есть был вызыван метод stop(), в котором ей присваивается true (см 40 строчку кода))
+                    break;   //выход из бесконечного цикла for( ; ; )
+            } catch(InterruptedException e) {} //конец блока перехвата исключения InterruptedException e (ошибки прерывания потока)
+        } //конец тела бесконечного цикла
+    } //конец метода run()
+
+    public void stop() { //реализация метода run() из интерфейса Runnable. Не аварийно завершает работу потока выполнения приложения
+        stopFlag = true; //флаг принимает истинное значение
+        t = null;        //поток выполнения обнуляется
+    } //конец метода stop()
+
+    private void updateTime() { //приватный метод-процедура, изменяет значение переменной календаря (nw) на текущие показатели момента времени и даты
+        nw.setTimeInMillis(System.currentTimeMillis()); // setTimeInMillis() - установить значение в переменную nw; System.currentTimeMillis() - получить текущее время в миллисекундах
+    } //конец метода updateTime()
+
+    public void paint(Graphics g) { //приватный метод-процедура, параметром которого является переменная g типа Graphics. На вход получает "материал для перерисовки"
+        int hours   = nw.get(Calendar.HOUR);         //переменная метода целочисленного типа, в которую присваивается значение часов из переменной календаря (nw)
+        int minutes = nw.get(Calendar.MINUTE);       //аналогично, для минут. Метод get() - взять из переменной nw нужное значение
+        int seconds = nw.get(Calendar.SECOND);       //секунды
+        int millis  = nw.get(Calendar.MILLISECOND);  //миллисекунды для расчёта радиан
+
+        maxhand = width / 2; //расчёт длины секундной стрелки
+        rdns = (seconds + ((double)millis/1000)) / 60.0; //секундная стрелка
+        drw(g, rdns, 0, maxhand); //вызываем метод drw() этого класса для перерисовки секундной стрелки по новым значениям, координаты линии вычисляются внутри, отрисовка линии тоже в методе drw()
+
+        maxhand = width / 3;  //расчёт длины минутной стрелки
+        fminutes = (minutes + rdns) / 60.0; //минутная стрелка
+        drw(g, fminutes, 0, maxhand); //перерисовка минутной стрелки, передаётся объект g (графика этого аплета), дробное значение минут и длина стрелки
+
+        maxhand = width / 4;  //расчёт длины стрелки часов
+        drw(g, (hours + fminutes) / 12.0, 0, maxhand); //перерисовка стрелки, указывающая на текущий час
+
+        g.drawOval(0, 0, width, hight); //отрисовка круга циферблата часов
+
+        //отрисовка надписей на циферблате часов
+        g.drawString("9", xcent-145, ycent); //"9" - строка, которую отобразить, xcent, ycent - координаты по осям х и y
+        g.drawString("3", xcent+140, ycent); //xcent+140 - по оси Х смещаемся на 140 пикселей вправо, ycent - по оси Y от центра никуда не смещаемся
+        g.drawString("6", xcent, ycent+145); //xcent - по оси X остаёмся в центре, ycent+145 - по оси Y от центра вниз на 140 пикселей смещаемся
+        g.drawString("12", xcent, ycent-135);//xcent - по оси X остаёмся в центре, ycent-135 - по оси Y от центра вверх на 140 пикселей смещаемся
+    } //конец метода paint(Graphics g)
+
+    public void drw(Graphics g, double prct, int minRadius, int maxRadius) { //приватный метод-процедура, содержит чистую математику
+    // рисующий какую-либо стрелку наших часов по заданным параметрам, на основе которых вычисляется положение отрисовывающейся линии
+        radins = (0.5 - prct)*TWO_PI;  //в переменную radins присваивается значение (0.5 - prct)*TWO_PI
+        sine   = Math.sin(radins); //рассчёт синуса по времени (минутам/секундам/часам)
+        cosine = Math.cos(radins); //рассчёт косинуса по времени (минутам/секундам/часам)
+        dxmin = xcent + (int)(minRadius * sine);  //рассчёт координаты x1 отрезка
+        dymin = ycent + (int)(minRadius * cosine);//рассчёт координаты y1 отрезка
+
+        dxmax = xcent + (int)(maxRadius * sine);  //рассчёт координаты x2 отрезка
+        dymax = ycent + (int)(maxRadius * cosine);//рассчёт координаты y2 отрезка
+
+        g.drawLine(dxmin, dymin, dxmax, dymax); //отрисовать линию drawLine() на по вычисленным в данном методе координатам dxmin, dymin, dxmax, dymax, которые соответствуют x1, y1, x2, y2
+    } //конец метода drw(Graphics g, double prct, int minRadius, int maxRadius)
+}  //конец класса Analogclock
