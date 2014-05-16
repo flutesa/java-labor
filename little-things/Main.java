@@ -4,19 +4,19 @@ public class Main {
 	public static void first(Scanner console) {
 		System.out.print("Input n (n<128): ");
 		byte n = console.nextByte();
-		ArrayList<String> arrayStr = new ArrayList<String>();
+		String[] arrayStr = new String[n];
 		int sum = 0;
 		for (byte i=0; i<n; i++) {
 			System.out.println("Input new string: ");
-			arrayStr.add(console.next());
-			sum += arrayStr.get(i).length();
+			arrayStr[i] = console.next();
+			sum += arrayStr[i].length();
 		}
 		float average = sum/(float)n;
 		byte i = 0;
 		while (i<n) {
-			int strLength = arrayStr.get(i).length();
+			int strLength = arrayStr[i].length();
 			if (strLength < average) {
-				System.out.println(arrayStr.get(i) + " " + strLength);
+				System.out.println(arrayStr[i] + " " + strLength);
 				i++;
 			} else {
 			i++;
